@@ -11,6 +11,9 @@ import os
 
 # 폰트 파일 경로 설정
 font_path = os.path.join('nanum-gothic', 'NanumGothic.ttf')
+
+# streamlit은 리눅스 가상환경 따르기 때문에
+# 기본값으로 한글 폰트가 X => 별도 설치 필요!
 font_prop = fm.FontProperties(fname=font_path)
 
 # 운영체제에 따른 한글 폰트 설정
@@ -58,7 +61,7 @@ selected_company = st.sidebar.selectbox(
 )
 ticker = tickers[selected_company]
 
-# 날짜 선택
+# 날짜 선택 - 1년 단위로
 start_date = st.sidebar.date_input("시작 날짜", datetime.now() - timedelta(days=365))
 end_date = st.sidebar.date_input("종료 날짜", datetime.now())
 
@@ -75,6 +78,7 @@ try:
     # 기본 주식 정보 표시
     st.subheader(f"{selected_company} ({ticker}) 주식 정보")
     col1, col2, col3 = st.columns(3)
+    # 시리즈 집계함수 사용
     with col1:
         st.metric("현재 가격", f"${df['Close'][-1]:.2f}")
     with col2:
@@ -82,14 +86,14 @@ try:
     with col3:
         st.metric("52주 최저가", f"${df['Low'].min():.2f}")
 
-    # 다양한 시각화를 위한 탭 생성
+    # 다양한 시각화를 위한 탭 생성 (=radio 버튼)
     tab1, tab2, tab3 = st.tabs(["Matplotlib", "Seaborn", "Plotly"])
 
-    # Matplotlib 차트
+    # Matplotlib 차트 (streamlit 기본 문법)
     with tab1:
         st.subheader("Matplotlib 차트")
         fig, ax = plt.subplots(figsize=(12, 6))
-        ax.plot(df.index, df['Close'], label='종가')
+        ax.plot(df.index, df['Close'], label='종가') # matplotlib
         ax.set_title(f"{selected_company} ({ticker}) 주가")
         ax.set_xlabel("날짜")
         ax.set_ylabel("가격 ($)")
@@ -101,7 +105,7 @@ try:
     with tab2:
         st.subheader("Seaborn 차트")
         fig, ax = plt.subplots(figsize=(12, 6))
-        sns.lineplot(data=df, x=df.index, y='Close', ax=ax)
+        sns.lineplot(data=df, x=df.index, y='Close', ax=ax) # seaborn
         ax.set_title(f"{selected_company} ({ticker}) 주가")
         ax.set_xlabel("날짜")
         ax.set_ylabel("가격 ($)")
@@ -127,6 +131,7 @@ try:
     
     with col1:
         # 이동평균선
+        # pandas 메서드 중 시계열 처리 관련 메서드 존재 = rolling
         df['MA20'] = df['Close'].rolling(window=20).mean()
         df['MA50'] = df['Close'].rolling(window=50).mean()
         
@@ -151,5 +156,6 @@ try:
         ax.grid(True)
         st.pyplot(fig)
 
+# 에러 있으면 error 메세지 뜨게
 except Exception as e:
     st.error(f"데이터 로딩 오류: {str(e)}") 
